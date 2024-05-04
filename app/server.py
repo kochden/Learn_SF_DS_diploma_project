@@ -7,11 +7,11 @@ import os
 import numpy as np
 import pandas as pd
 
-from catboost import CatBoostRegressor
-
 import re
 import difflib
 import ast
+
+import loading_components as lc
 
 #-----------------------------------------------------------
 
@@ -194,7 +194,7 @@ def clearing_data(df):
     # сразу переведем в верхний регистр и потом посмотрим
     df['state'] = df['state'].apply(lambda x: x.upper() if type(x) == str else x)
     # преобразуем в множество
-    set_state = set(cities['state_id'])
+    set_state = set(lc.cities['state_id'])
     # найдем те, что не найдены.
     missing_states = df[~df['state'].isin(set_state)]['state'].unique()
     # удалим не существующие
@@ -217,7 +217,7 @@ def clearing_data(df):
             return found_city[(state_city[0], state_city[1])]
         else:
             # ищем список городов для штата
-            ls_cities = list(cities[cities['state_id'] == state_city[0]]['city_ascii_upper'])
+            ls_cities = list(lc.cities[lc.cities['state_id'] == state_city[0]]['city_ascii_upper'])
             # подбираем похожий город
             res = difflib.get_close_matches(state_city[1], ls_cities)
             if res == []:
@@ -315,7 +315,7 @@ def clearing_data(df):
     df['beds'] = df['beds'].replace(to_replace=r'[^\d.]+', value='', regex=True)
     df['beds'] = df['beds'].apply(feature_to_int)
     # пропуски заполним медианой
-    df['beds'] = df['beds'].fillna(median_beds)
+    df['beds'] = df['beds'].fillna(lc.median_beds)
 
     # sqtf
     # почистим
@@ -340,7 +340,7 @@ def clearing_data(df):
 
     df['sqft'] = df['sqft'].apply(clearing_sqft)
     # пропуски заполним медианой
-    df['sqft'] = df['sqft'].fillna(median_sqft)
+    df['sqft'] = df['sqft'].fillna(lc.median_sqft)
 
     # снова baths
     # заполним пропущенные значения
@@ -515,7 +515,7 @@ def clearing_data(df):
     df.loc[index_list, 'Year built'] = np.nan
 
     #пропуски заполним медианой
-    df['Year built'] = df['Year built'].fillna(median_year_built)
+    df['Year built'] = df['Year built'].fillna(lc.median_year_built)
     # переведем в возраст
     current_year = 2024
     df['age_of_the_object'] = current_year - df['Year built']
@@ -727,9 +727,9 @@ def clearing_data(df):
     df[['schools_av_rating', 'schools_av_distance', 'schools_av_grades']] = df['schools'].apply(schools_analysis_2)
 
     # заполним пропуски медианой
-    df['schools_av_rating'] = df['schools_av_rating'].fillna(median_schools_av_rating)
-    df['schools_av_distance'] = df['schools_av_distance'].fillna(median_schools_av_distance)
-    df['schools_av_grades'] = df['schools_av_grades'].fillna(median_schools_av_grades)
+    df['schools_av_rating'] = df['schools_av_rating'].fillna(lc.median_schools_av_rating)
+    df['schools_av_distance'] = df['schools_av_distance'].fillna(lc.median_schools_av_distance)
+    df['schools_av_grades'] = df['schools_av_grades'].fillna(lc.median_schools_av_grades)
 
     # удаляем лишние колонки
     df = df.drop(columns=['propertyType', 'city', 'stories', 'homeFacts', 'Year built', 'Remodeled year', 'schools'])
@@ -741,14 +741,14 @@ def clearing_data(df):
 def encode_features(df):
     # Binary Encoding
     columns_to_change = ['property_type', 'state', 'city_2']
-    type_bin = bin_encoder.transform(df[columns_to_change])
+    type_bin = lc.bin_encoder.transform(df[columns_to_change])
     df = pd.concat([df, type_bin], axis=1)
     # удалим лишнее
     df = df.drop(columns=columns_to_change)
     
     # OneHot Encoding
     columns_to_change = ['status', 'Heating']
-    type_hot = hot_encoder.transform(df[columns_to_change])
+    type_hot = lc.hot_encoder.transform(df[columns_to_change])
     df = pd.concat([df, type_hot], axis=1)
     # удалим лишнее
     df = df.drop(columns=columns_to_change)
@@ -768,7 +768,7 @@ def pred_fun():
     df = pd.read_json(df_json)
     df = clearing_data(df) # очистка входящих данных
     df = encode_features(df) # кодируем категориальные признаки
-    predict = list(model.predict(df).round(2))
+    predict = list(lc.model.predict(df).round(2))
     print(predict)
     return jsonify({'prediction': predict})
 
@@ -776,42 +776,5 @@ def pred_fun():
 
 if __name__ == '__main__':
     
-    # Производим десериализацию и извлекаем необходимые компоненты из pkl
-    # модель
-    file_name = 'model_cbr.pickle'
-    path_to_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', file_name)
-    with open(path_to_file, 'rb') as pkl_file:
-        model = pickle.load(pkl_file)
-    
-    # медианы
-    file_name = 'median.pickle'
-    path_to_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', file_name)
-    with open(path_to_file, 'rb') as pkl_file:
-        median = pickle.load(pkl_file)
-    median_beds = median.loc[0, 'median_beds']
-    median_sqft = median.loc[0, 'median_sqft']
-    median_year_built = median.loc[0, 'median_year_built']
-    median_schools_av_rating = median.loc[0, 'median_schools_av_rating']
-    median_schools_av_distance = median.loc[0, 'median_schools_av_distance']
-    median_schools_av_grades = median.loc[0, 'median_schools_av_grades']
-    
-    # кодировщики
-    # bin_encoder
-    file_name = 'bin_encoder.pickle'
-    path_to_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', file_name)
-    with open(path_to_file, 'rb') as pkl_file:
-        bin_encoder = pickle.load(pkl_file)
-    # hot_encoder
-    file_name = 'hot_encoder.pickle'
-    path_to_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', file_name)
-    with open(path_to_file, 'rb') as pkl_file:
-        hot_encoder = pickle.load(pkl_file)
-    
-    # эталонное наименование города
-    file_name = 'cities.pickle'
-    path_to_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'files', file_name)
-    with open(path_to_file, 'rb') as pkl_file:
-        cities = pickle.load(pkl_file)
-    
-    # app.run('localhost', 5000)
+    #app.run('localhost', 5000)
     app.run('0.0.0.0', 5000)

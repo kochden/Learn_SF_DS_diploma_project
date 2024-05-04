@@ -22,7 +22,8 @@ def sending_request(end_point, query_string):
 if __name__ == '__main__':
     
     # ендпоинт
-    end_point = 'http://localhost:5000/predict'
+    #end_point = 'http://localhost:5000/predict'
+    end_point = 'http://localhost/predict'
     
     # отберем для теста два небольших фрагмента датасета
     file_name = 'data.zip'
@@ -43,3 +44,4 @@ if __name__ == '__main__':
             print(result[1])
         else:
             print(f'Ошибка. Код ошибки: {result[0]}')
+
