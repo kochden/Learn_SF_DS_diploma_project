@@ -813,4 +813,6 @@ if __name__ == '__main__':
     with open(path_to_file, 'rb') as pkl_file:
         cities = pickle.load(pkl_file)
     
-    app.run('localhost', 5000)
+    # app.run('localhost', 5000)
+    app.run('0.0.0.0', 5000)
+    
