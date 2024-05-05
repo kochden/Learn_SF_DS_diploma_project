@@ -42,20 +42,7 @@
 - Серия моделей и выбор лучшей [3_final_model.ipynb](3_final_model.ipynb).
 
 Таблица с результатами.
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: center;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -104,7 +91,6 @@
     </tr>
   </tbody>
 </table>
-</div>
 
 В качестве лучшей выбрана модель [CatBoostRegressor](https://catboost.ai/en/docs/concepts/python-reference_catboostregressor).
 
