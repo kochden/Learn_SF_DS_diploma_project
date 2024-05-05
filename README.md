@@ -96,9 +96,9 @@
 
 #### Вывод модели в продакшн состоит:
 - Код сервера состоит из двух файлов:
-    - Собственно сам сервер [server.py](app\server.py);
-    - Загрузка необходимых компонентов [loading_components.py](app\loading_components.py);
-    - Сами компоненты находятся в папке [app\files](app\files);
+    - Собственно сам сервер [server.py](app/server.py);
+    - Загрузка необходимых компонентов [loading_components.py](app/loading_components.py);
+    - Сами компоненты находятся в папке [app/files](app/files);
 - Файлов необходимых для воспроизводимости кода:
     - [requirements.txt](requirements.txt);
     - [uwsgi.ini](uwsgi.ini);
